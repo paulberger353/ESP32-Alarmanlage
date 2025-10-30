@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alarmanlage_ESP32", "Alarmanlage_ESP32\Alarmanlage_ESP32.csproj", "{FF27A534-CB8E-4D69-9D6B-0FAF684FC229}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF27A534-CB8E-4D69-9D6B-0FAF684FC229}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF27A534-CB8E-4D69-9D6B-0FAF684FC229}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF27A534-CB8E-4D69-9D6B-0FAF684FC229}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF27A534-CB8E-4D69-9D6B-0FAF684FC229}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A585C0FF-DE1D-45DA-9FF4-AAD4501FFB98}
+	EndGlobalSection
+EndGlobal
