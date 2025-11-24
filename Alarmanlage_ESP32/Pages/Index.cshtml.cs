@@ -5,13 +5,16 @@ using System.Net.Http;
 namespace Alarmanlage_ESP32.Pages
 {
     /// <summary>
-    /// PageModel für die Hauptseite der Alarmanlage.
+    /// PageModel fï¿½r die Hauptseite der Alarmanlage.
     /// Ruft Sensordaten vom ESP32 ab und zeigt sie an.
     /// </summary>
     public class IndexModel : PageModel
     {
         private readonly ILogger<IndexModel> _logger;
-        private static readonly HttpClient httpClient = new HttpClient();
+        private static readonly HttpClient httpClient = new HttpClient 
+        { 
+            Timeout = TimeSpan.FromSeconds(2) 
+        };
 
         public IndexModel(ILogger<IndexModel> logger)
         {
@@ -29,11 +32,11 @@ namespace Alarmanlage_ESP32.Pages
         // Liste zur Speicherung der letzten 100 Messungen
         public static List<string> History = new List<string>();
 
-        // URL des ESP32 Webservers (ändert sich je nach Setup)
+        // URL des ESP32 Webservers (ï¿½ndert sich je nach Setup)
         private string ESP_URL = "http://192.168.4.1/data";
 
         /// <summary>
-        /// Wird bei jedem Seitenaufruf ausgeführt.
+        /// Wird bei jedem Seitenaufruf ausgefï¿½hrt.
         /// Holt aktuelle Daten vom ESP32.
         /// </summary>
         public async Task OnGetAsync()
@@ -42,7 +45,7 @@ namespace Alarmanlage_ESP32.Pages
         }
 
         /// <summary>
-        /// Wird beim Klick auf "Alarm deaktivieren" ausgeführt.
+        /// Wird beim Klick auf "Alarm deaktivieren" ausgefï¿½hrt.
         /// Sendet einen Befehl an den ESP32, um den Alarm auszuschalten.
         /// </summary>
         public async Task<IActionResult> OnPostDisableAlarmAsync()
@@ -64,7 +67,7 @@ namespace Alarmanlage_ESP32.Pages
 
         /// <summary>
         /// Holt aktuelle Sensordaten vom ESP32 und speichert sie in den Properties.
-        /// Fügt die Daten außerdem der History hinzu (neueste oben).
+        /// Fï¿½gt die Daten auï¿½erdem der History hinzu (neueste oben).
         /// </summary>
         private async Task FetchESPData()
         {
@@ -74,7 +77,7 @@ namespace Alarmanlage_ESP32.Pages
                 var data = await httpClient.GetStringAsync(ESP_URL);
                 var parts = data.Split(',');
 
-                // Wenn genug Daten vorhanden sind, Werte übernehmen
+                // Wenn genug Daten vorhanden sind, Werte ï¿½bernehmen
                 if (parts.Length >= 5)
                 {
                     Temp = parts[0];
@@ -85,12 +88,12 @@ namespace Alarmanlage_ESP32.Pages
                     Alarm = parts[5];
 
                     // Log-Eintrag formatieren
-                    string log = $"{DateTime.Now:HH:mm:ss} - Temp:{Temp}°C Hum:{Hum}% Motion:{Motion} Light:{Light} ({LightRaw}) Alarm:{Alarm}";
+                    string log = $"{DateTime.Now:HH:mm:ss} - Temp:{Temp}ï¿½C Hum:{Hum}% Motion:{Motion} Light:{Light} ({LightRaw}) Alarm:{Alarm}";
 
-                    // Neueste Daten oben einfügen
+                    // Neueste Daten oben einfï¿½gen
                     History.Insert(0, log);
 
-                    // Liste auf max. 100 Einträge beschränken
+                    // Liste auf max. 100 Eintrï¿½ge beschrï¿½nken
                     if (History.Count > 100)
                         History.RemoveAt(History.Count - 1);
                 }
