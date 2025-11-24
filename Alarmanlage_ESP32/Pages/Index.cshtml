@@ -1,102 +1,145 @@
 ﻿@page
-@model Alarmanlage_ESP32.Pages.IndexModel
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
 
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="utf-8" />
-    <title>Smart Home Dashboard</title>
-    <style>
-        body {
-            font-family: Arial;
-            margin: 2rem;
-        }
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2 class="display-6 fw-bold text-dark">Übersicht</h2>
+        <p class="text-secondary">Echtzeit-Daten aus dem Wohnzimmer</p>
+    </div>
+</div>
 
-        .card {
-            border: 1px solid #ccc;
-            padding: 1rem;
-            margin: 0.5rem;
-            display: inline-block;
-        }
+<div class="dashboard-grid">
+    
+    <!-- Temperatur -->
+    <div class="sensor-card">
+        <div class="card-header-icon">
+            <span class="card-label">Temperatur</span>
+            <span class="material-icons-round" style="color: #FF5722; background: rgba(255,87,34,0.1);">thermostat</span>
+        </div>
+        <div class="card-value">
+            <span id="temp">@Model.Temp</span><span class="unit">°C</span>
+        </div>
+    </div>
 
-        .alarm {
-            color: red;
-            font-weight: bold;
-        }
+    <!-- Luftfeuchtigkeit -->
+    <div class="sensor-card">
+        <div class="card-header-icon">
+            <span class="card-label">Luftfeuchtigkeit</span>
+            <span class="material-icons-round" style="color: #00BCD4; background: rgba(0,188,212,0.1);">water_drop</span>
+        </div>
+        <div class="card-value">
+            <span id="hum">@Model.Hum</span><span class="unit">%</span>
+        </div>
+    </div>
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 1rem;
-        }
+    <!-- Bewegung -->
+    <div class="sensor-card">
+        <div class="card-header-icon">
+            <span class="card-label">Bewegung</span>
+            <span class="material-icons-round" style="color: #673AB7; background: rgba(103, 58, 183, 0.1);">directions_run</span>
+        </div>
+        <div class="card-value">
+            <span id="motion">@Model.Motion</span>
+        </div>
+    </div>
 
-        th, td {
-            border: 1px solid #ccc;
-            padding: 0.5rem;
-            text-align: left;
-        }
+    <!-- Licht -->
+    <div class="sensor-card">
+        <div class="card-header-icon">
+            <span class="card-label">Lichtsensor</span>
+            <span class="material-icons-round" style="color: #FFC107; background: rgba(255, 193, 7, 0.1);">light_mode</span>
+        </div>
+        <div class="card-value">
+            <span id="light">@Model.Light</span>
+        </div>
+    </div>
 
-        tbody {
-            max-height: 200px;
-            display: block;
-            overflow-y: auto;
-        }
+    <!-- Alarm Status -->
+    <div class="sensor-card alarm-card" id="alarmCard">
+        <div class="card-header-icon">
+            <span class="card-label">Sicherheitsstatus</span>
+            <span class="material-icons-round" id="alarmIcon">notifications_none</span>
+        </div>
+        <div class="card-value">
+            <span id="alarm">@Model.Alarm</span>
+        </div>
+    </div>
+</div>
 
-            thead, tbody tr {
-                display: table;
-                width: 100%;
-                table-layout: fixed;
-            }
-    </style>
-</head>
-<body>
-    <h1>Smart Home Dashboard</h1>
+<div class="row mb-5">
+    <div class="col-md-4 offset-md-4">
+        <form method="post" asp-page-handler="DisableAlarm">
+            <button type="submit" class="btn-disable-alarm">
+                <span class="material-icons-round">gpp_good</span>
+                Alarm deaktivieren
+            </button>
+        </form>
+    </div>
+</div>
 
-    <div class="card">Temperatur: <span id="temp">@Model.Temp</span> °C</div>
-    <div class="card">Luftfeuchtigkeit: <span id="hum">@Model.Hum</span> %</div>
-    <div class="card">Bewegung: <span id="motion">@Model.Motion</span></div>
-    <div class="card">Licht: <span id="light">@Model.Light</span></div>
-    <div class="card alarm">Alarm: <span id="alarm">@Model.Alarm</span></div>
-
-    <form method="post" asp-page-handler="DisableAlarm">
-        <button type="submit">Alarm deaktivieren</button>
-    </form>
-
-    <h2>Historie</h2>
-    <table>
-        <thead>
-            <tr><th>Zeit</th><th>Daten</th></tr>
-        </thead>
-        <tbody id="historyBody">
+<div class="history-section">
+    <div class="section-title">
+        <span class="material-icons-round text-secondary">history</span>
+        Ereignisprotokoll
+    </div>
+    <div class="history-list" id="historyContainer">
+        <div id="historyBody">
             @foreach (var log in IndexModel.History)
             {
-                <tr>
-                    <td>@log.Substring(0, 8)</td>
-                    <td>@log.Substring(11)</td>
-                </tr>
+                <div class="history-item">
+                    <span class="time-badge">@log.Substring(0, 8)</span>
+                    <span class="data-content">@log.Substring(11)</span>
+                </div>
             }
-        </tbody>
-    </table>
+        </div>
+    </div>
+</div>
 
-    <script>
-        async function fetchData() {
+<script>
+    async function fetchData() {
+        try {
             const response = await fetch(window.location.href);
             const html = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
-            document.getElementById('temp').innerText = doc.getElementById('temp').innerText;
-            document.getElementById('hum').innerText = doc.getElementById('hum').innerText;
-            document.getElementById('motion').innerText = doc.getElementById('motion').innerText;
-            document.getElementById('light').innerText = doc.getElementById('light').innerText;
-            document.getElementById('alarm').innerText = doc.getElementById('alarm').innerText;
+            const updateText = (id) => {
+                const el = document.getElementById(id);
+                const newEl = doc.getElementById(id);
+                if (el && newEl) el.innerText = newEl.innerText;
+                return newEl ? newEl.innerText : "";
+            };
 
-            // Update History
-            const newBody = doc.getElementById('historyBody');
-            document.getElementById('historyBody').innerHTML = newBody.innerHTML;
+            updateText('temp');
+            updateText('hum');
+            updateText('motion');
+            updateText('light');
+            const alarmVal = updateText('alarm');
+
+            const alarmCard = document.getElementById('alarmCard');
+            const alarmIcon = document.getElementById('alarmIcon');
+            
+            if (alarmVal !== "0" && alarmVal !== "--") {
+                alarmCard.classList.add('alarm-active');
+                alarmIcon.innerText = "notifications_active";
+            } else {
+                alarmCard.classList.remove('alarm-active');
+                alarmIcon.innerText = "notifications_none";
+            }
+
+            const currentHistory = document.getElementById('historyBody');
+            const newHistory = doc.getElementById('historyBody');
+            if(currentHistory && newHistory && currentHistory.innerHTML !== newHistory.innerHTML) {
+                currentHistory.innerHTML = newHistory.innerHTML;
+            }
+
+        } catch (error) {
+            console.error("Verbindungsfehler...", error);
         }
+    }
 
-        setInterval(fetchData, 2000);
-    </script>
-</body>
-</html>
+    setInterval(fetchData, 2000);
+</script>
