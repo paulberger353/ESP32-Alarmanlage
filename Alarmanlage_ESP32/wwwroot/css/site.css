@@ -198,6 +198,7 @@ body {
     color: var(--text-primary);
     font-family: 'Roboto Mono', monospace;
     font-size: 0.9rem;
+    margin-right: 50px;
 }
 
 .btn-disable-alarm {

@@ -5,7 +5,7 @@ using System.Net.Http;
 namespace Alarmanlage_ESP32.Pages
 {
     /// <summary>
-    /// PageModel f�r die Hauptseite der Alarmanlage.
+    /// PageModel für die Hauptseite der Alarmanlage.
     /// Ruft Sensordaten vom ESP32 ab und zeigt sie an.
     /// </summary>
     public class IndexModel : PageModel
@@ -27,16 +27,16 @@ namespace Alarmanlage_ESP32.Pages
         public string Motion { get; set; } = "0";
         public string Light { get; set; } = "0";
         public string LightRaw { get; set; } = "0";
-        public string Alarm { get; set; } = "0";
+        public string Alarm { get; set; } = string.Empty; // default: empty => kein Alarm
 
-        // Liste zur Speicherung der letzten 100 Messungen
+        // Liste zur Speicherung der letzten100 Messungen
         public static List<string> History = new List<string>();
 
-        // URL des ESP32 Webservers (�ndert sich je nach Setup)
+        // URL des ESP32 Webservers (ändert sich je nach Setup)
         private string ESP_URL = "http://192.168.4.1/data";
 
         /// <summary>
-        /// Wird bei jedem Seitenaufruf ausgef�hrt.
+        /// Wird bei jedem Seitenaufruf ausgeführt.
         /// Holt aktuelle Daten vom ESP32.
         /// </summary>
         public async Task OnGetAsync()
@@ -45,7 +45,7 @@ namespace Alarmanlage_ESP32.Pages
         }
 
         /// <summary>
-        /// Wird beim Klick auf "Alarm deaktivieren" ausgef�hrt.
+        /// Wird beim Klick auf "Alarm deaktivieren" ausgeführt.
         /// Sendet einen Befehl an den ESP32, um den Alarm auszuschalten.
         /// </summary>
         public async Task<IActionResult> OnPostDisableAlarmAsync()
@@ -55,7 +55,7 @@ namespace Alarmanlage_ESP32.Pages
                 var resp = await httpClient.GetAsync("http://192.168.4.1/disable-alarm");
                 if (resp.IsSuccessStatusCode)
                 {
-                    Alarm = "0"; // Alarm erfolgreich deaktiviert
+                    Alarm = string.Empty; // Alarm erfolgreich deaktiviert
                 }
             }
             catch (Exception ex)
@@ -67,7 +67,7 @@ namespace Alarmanlage_ESP32.Pages
 
         /// <summary>
         /// Holt aktuelle Sensordaten vom ESP32 und speichert sie in den Properties.
-        /// F�gt die Daten au�erdem der History hinzu (neueste oben).
+        /// Fügt die Daten außerdem der History hinzu (neueste oben).
         /// </summary>
         private async Task FetchESPData()
         {
@@ -77,32 +77,101 @@ namespace Alarmanlage_ESP32.Pages
                 var data = await httpClient.GetStringAsync(ESP_URL);
                 var parts = data.Split(',');
 
-                // Wenn genug Daten vorhanden sind, Werte �bernehmen
-                if (parts.Length >= 5)
+                // Wenn genug Daten vorhanden sind, Werte übernehmen
+                // Zugriff auf parts[5] benötigt mindestens6 Teile
+                if (parts.Length >=6)
                 {
                     Temp = parts[0];
                     Hum = parts[1];
-                    Motion = parts[2];
-                    Light = parts[3];
                     LightRaw = parts[4];
-                    Alarm = parts[5];
 
-                    // Log-Eintrag formatieren
-                    string log = $"{DateTime.Now:HH:mm:ss} - Temp:{Temp}�C Hum:{Hum}% Motion:{Motion} Light:{Light} ({LightRaw}) Alarm:{Alarm}";
 
-                    // Neueste Daten oben einf�gen
-                    History.Insert(0, log);
+                    ShowBinaryDataOnWebsite(Convert.ToInt32(parts[2]), Convert.ToInt32(parts[3]), Convert.ToInt32(parts[5]));
 
-                    // Liste auf max. 100 Eintr�ge beschr�nken
-                    if (History.Count > 100)
-                        History.RemoveAt(History.Count - 1);
+                    // Log-Eintrag bilden und in Historie einfügen
+                    History.Insert(0, BuildLogString(parts));
+
+                    // Liste auf max.100 Einträge beschränken
+                    if (History.Count >100)
+                        History.RemoveAt(History.Count -1);
                 }
             }
             catch (Exception ex)
             {
                 // Fehlerbehandlung und Logeintrag
                 _logger.LogError(ex, "Fehler beim Abrufen der ESP-Daten");
-                Temp = Hum = Motion = Light = Alarm = "--";
+                Temp = Hum = Motion = Light = "--";
+                Alarm = string.Empty; // setze Alarm leer bei Fehler
+            }
+        }
+
+        /// <summary>
+        /// Methode bastelt sich aus den übergebenen Daten eine string zusammen für die HIstorie
+        /// </summary>
+        /// <param name="parts">Daten vom ESP</param>
+        /// <returns>String für die Historie</returns>
+        private string BuildLogString(string[] parts)
+        {
+            string log = DateTime.Now.ToLongTimeString() + $" TTTemp: {parts[0]}\tHum: {parts[1]}\tLicht: {parts[3]} ({parts[4]})\t";
+
+            if (parts[2] == "1")
+            {
+                log += "Bewegung erkannt!\t";
+            }
+            else
+            {
+                log += "Keine Bewegung erkannt!\t\t";
+            }
+
+            if (parts[5] == "1")
+            {
+                log += "ALARM!!";
+            }
+            else
+            {
+                log += "Kein Alarm";
+            }
+
+            return log;        
+        }
+
+        /// <summary>
+        /// Methode stellt die binären Werte für 
+        /// Bewegung, Licht und Alarmstate dar
+        /// </summary>
+        /// <param name="motion">Bewegung</param>
+        /// <param name="light">Licht</param>
+        /// <param name="alarmstate">Alarmstate</param>
+        private void ShowBinaryDataOnWebsite(int _motion, int _light, int _alarmstate)
+        {
+            //Stelle Werte für Bewegung dar
+            if (_motion ==1)
+            {
+                Motion = "Erkannt!";
+            }
+            else
+            {
+                Motion = string.Empty;
+            }
+
+            //Stelle Werte für Licht dar
+            if (_light ==1)
+            {
+                Light = "AN";
+            }
+            else 
+            {
+                Light = "AUS";
+            }
+
+            //Stelle Werte für Alarm dar
+            if (_alarmstate ==1)
+            {
+                Alarm = "Einbrecher!"; // genau dieser Text löst Alarm im Frontend aus
+            }
+            else
+            {
+                Alarm = string.Empty;
             }
         }
     }

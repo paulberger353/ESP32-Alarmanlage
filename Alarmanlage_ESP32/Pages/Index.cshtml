@@ -117,12 +117,13 @@
             updateText('hum');
             updateText('motion');
             updateText('light');
-            const alarmVal = updateText('alarm');
+            const alarmVal = updateText('alarm').trim();
 
             const alarmCard = document.getElementById('alarmCard');
             const alarmIcon = document.getElementById('alarmIcon');
             
-            if (alarmVal !== "0" && alarmVal !== "--") {
+            // nur aktivieren, wenn exakt "Einbrecher!" (case-sensitive)
+            if (alarmVal === "Einbrecher!") {
                 alarmCard.classList.add('alarm-active');
                 alarmIcon.innerText = "notifications_active";
             } else {
